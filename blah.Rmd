@@ -31,7 +31,7 @@ data <-
 
 ```{r}
 ggplot(data, aes(x = Midpoint, y = Count)) + 
-  geom_point()
+  geom_jitter(height = 0.25, alpha=0.4)
 ```
 
 
