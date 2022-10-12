@@ -1,3 +1,10 @@
 
 
-https://vscode.dev/liveshare
+```{r}
+library(tidyverse)
+```
+
+```{r}
+x <- 1:10
+```
+
