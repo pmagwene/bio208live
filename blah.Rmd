@@ -7,4 +7,5 @@ x <- 1:10
 plot(x)
 ```
 
-Now I'm writing some prose.  
+Now I'm writing some prose.  How awesome is that?
+
