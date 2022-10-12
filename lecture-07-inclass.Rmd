@@ -60,8 +60,34 @@ ggplot(pileup_df, aes(x = coords)) +
 ```
 
 ```{r}
-ts4 <- readxl("~/Desktop/Nagalakshmi_etal_from_TableS4.xls")
+library(readxl)
 ```
+
+
+```{r}
+ts4 <- read_excel(
+  "~/Desktop/Nagalakshmi_etal_2008_from_TableS4.xls")
+```
+
+
+```{r}
+ggplot(ts4,
+       aes(x = SGD_Start, 
+           y = Chrom, 
+           width = SGD_End - SGD_Start + 1, 
+           fill = Transcription_level_log2, 
+           height=0.5)) + 
+
+    scale_fill_distiller(palette="RdYlBu",
+                         #direction=-1,
+                         na.value = "white",
+                         limits = c(0,10)) +
+  geom_tile() + 
+  theme_classic()
+
+ggsave("expression-output.png", dpi=600)
+```
+
 
 
 
