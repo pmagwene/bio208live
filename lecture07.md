@@ -14,4 +14,4 @@ z <- 10:20
 
 So how fast does autosave kick in?
 
-Not ast enough for my 
+Not fast enough for my 
