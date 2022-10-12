@@ -17,7 +17,7 @@ library(tidyverse)
 
 ```{r}
 data <- read_tsv("~/Downloads/GSE11209_RAW/snyder.tsv", 
-                 col_names = c("Chrom", "Seq","Start","End","Count"))
+                 col_names = c("Chrom", "Start","End", "Seq", "Count", "Strand"))
 ```
 
 ```{r}
@@ -25,6 +25,13 @@ str(data)
 ```
 
 ```{r}
-str
+data <- 
+  mutate(data, Midpoint = (Start+End)/2)
 ```
+
+```{r}
+ggplot(data, aes(x = Midpoint, y = Count)) + 
+  geom_point()
+```
+
 
