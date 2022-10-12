@@ -31,7 +31,24 @@ data <-
 
 ```{r}
 ggplot(data, aes(x = Midpoint, y = Count)) + 
-  geom_jitter(height = 0.25, alpha=0.4)
+  geom_line(size=1, alpha=0.5) + 
+  ylim(0,8)
 ```
 
+```{r}
+coords <- c()
+for (i in 1:length(data$Start)) {
+  coords <- c(coords, data$Start[i]:data$End[i])
+}
+```
+
+```{r}
+df <- tibble(coords = coords)
+
+ggplot(df, aes(x = coords)) + 
+  geom_histogram(bins=500) + 
+    ylim(0,300) +
+  scale_y_continuous(trans = "log2") 
+
+```
 
