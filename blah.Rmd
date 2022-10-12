@@ -52,3 +52,30 @@ ggplot(df, aes(x = coords)) +
 
 ```
 
+```{r}
+tableS4 <- read_excel("~/Desktop/TableS4.xls")
+ts4 <- 
+  rename(tableS4,expression = `Transcription_level(log2)`) |>
+  mutate(Midpoint = (SGD_Start + SGD_End)/2)
+```
+
+```{r}
+library(RColorBrewer)
+
+display.brewer.pal(9, "Reds")  
+color.scheme <- brewer.pal(9,"Reds")
+```
+
+
+```{r}
+ts4 |>
+  filter(Chrom == "chrI", SGD_Start > 100000, SGD_End < 150000) |>
+ggplot(aes(x = SGD_Start, y = Chrom, width = SGD_End - SGD_Start, 
+           fill = expression, height=0.5)) + 
+    scale_fill_stepsn(colors=color.scheme,
+                         limits = c(0, 10),
+                         na.value = color.scheme[1]) +
+  geom_tile()
+```
+
+
