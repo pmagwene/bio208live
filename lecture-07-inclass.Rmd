@@ -5,3 +5,20 @@ library(readxl)
 ```
 
 
+```{r}
+chr16 <- read_tsv("~/Desktop/chr16_roi.tsv",
+                  col_names = c("Chrom", 
+                                "Start",
+                                "End",
+                                "Sequence",
+                                "Count",
+                                "Strand"))
+```
+```{r}
+chr16 <- 
+  chr16 |>
+  mutate(Midpoint = (Start + End)/2)
+```
+
+
+
