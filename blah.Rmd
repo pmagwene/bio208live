@@ -16,5 +16,12 @@ library(tidyverse)
 ```
 
 ```{r}
-data <- read_tsv("~/Desktop/")
+data <- read_tsv("~/Downloads/GSE11209_RAW/snyder.tsv", 
+                 col_names = c("Chrom", "Seq","Start","End","Count"))
 ```
+
+```{r}
+str(data)
+```
+
+
