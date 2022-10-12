@@ -12,7 +12,7 @@ Now I'm writing some prose.  How awesome is that?
 It's really cool I have to say.
 
 ```{r}
-
+library(tidyverse)
 ```
 
 ```{r}
