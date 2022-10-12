@@ -24,4 +24,7 @@ data <- read_tsv("~/Downloads/GSE11209_RAW/snyder.tsv",
 str(data)
 ```
 
+```{r}
+str
+```
 
