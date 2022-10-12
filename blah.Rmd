@@ -16,5 +16,5 @@ library(tidyverse)
 ```
 
 ```{r}
-data <- read_tsv()
+data <- read_tsv("~/Desktop/")
 ```
