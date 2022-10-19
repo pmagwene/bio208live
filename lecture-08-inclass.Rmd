@@ -1,5 +1,8 @@
 ---
 title: "Lecture 08"
+output:
+  html_document:
+    df_print: paged
 ---
 
 ## Libraries
@@ -12,6 +15,192 @@ library(tidyverse)
 ## Read source data
 
 ```{r}
+# test live share
+yeast.expression <- read_csv("~/Downloads/kelliher-scer-expression-data.csv")
+```
+```{r}
+yeast.1600 <-
+  filter(yeast.expression, normalized_per_rank <= 1600) |>
+  mutate(normalized_per_rank = NULL)
+```
+
+
+
+
+```{r}
+yeast.long <- 
+  pivot_longer(yeast.1600, !gene_ID,
+               names_to = "time",
+               values_to = "expression",
+               names_transform = list(time = as.integer))
+```
+
+```{r}
+str(yeast.long)
+```
+
+
+
+# draw a plot showing NRM expression over time
+```{r}
+yeast.long |>
+  filter(gene_ID %in% c("NRM1","HTB2")) |>
+  ggplot(aes(x = time, y = expression, color=gene_ID)) +
+  geom_point() + 
+  geom_line()
+
+```
+
+
+```{r}
+yeast.long |>
+  filter(gene_ID %in% c("NRM1")) |>
+  ggplot(aes(x = expression)) +
+  geom_histogram()
+
+
+```
+
+```{r}
+yeast.long |>
+  filter(gene_ID %in% c("NRM1", "HTB2")) |>
+  group_by(gene_ID) %>%
+  summarize(mean.expression = mean(expression),
+            std.dev.expression = sd(expression))
+```
+
+```{r}
+yeast.std <-
+  yeast.long |>
+  group_by(gene_ID) |>
+  mutate(std_expression = (expression-mean(expression))/sd(expression),
+         expression = NULL)
+  
+```
+
+
+
+```{r}
+yeast.std |>
+  filter(gene_ID %in% c("NRM1", "HTB2")) |>
+  group_by(gene_ID) %>%
+  summarize(mean.expression = mean(std_expression),
+            std.dev.expression = sd(std_expression))
+```
+
+
+```{r}
+yeast.std |>
+  filter(gene_ID %in% c("NRM1","HTB2", "ACE2")) |>
+  ggplot(aes(x = time, y = std_expression, color=gene_ID)) +
+  geom_point() + 
+  geom_line()
+
+```
+
+
+```{r}
+yeast.std |>
+  filter(gene_ID %in% c("NRM1","HTB2", "ACE2")) |>
+  ggplot(aes(x = time, y = gene_ID, fill=std_expression)) +
+  geom_tile() + 
+  #scale_fill_distiller(palette="PiYG")
+  scale_fill_gradient2(
+    low = "cyan",
+    mid = "black",
+    high = "yellow",
+    midpoint = 0)  
+
+```
+
+```{r}
+unique(yeast.std$gene_ID)[1:100]
+```
+
+
+```{r}
+yeast.std |>
+  filter(gene_ID %in% unique(yeast.std$gene_ID)[1:100]) |>
+  ggplot(aes(x = time, y = gene_ID, fill=std_expression)) +
+  geom_tile() + 
+  #scale_fill_distiller(palette="PiYG")
+  scale_fill_gradient2(
+    low = "cyan",
+    mid = "black",
+    high = "yellow",
+    midpoint = 0)  
+
+```
+
+# Find the maximum expression of each gene
+
+```{r}
+max.table <-
+  yeast.std |>
+  group_by(gene_ID) %>%
+  summarize(max.expression = max(std_expression),
+            max.index = which.max(std_expression)) 
+```
+
+```{r}
+max.table
+```
+
+
+
+
+```{r}
+max.table
+```
+```{r}
+df <- tibble::tribble(
+  ~color,     ~a, ~b,
+  "blue",      1,  2,
+  "green",     6,  2,
+  "purple",    3,  3,
+  "red",       2,  3,
+  "yellow",    5,  1
+)
+fct_reorder(df$color, df$a, min)
+
+```
+
+
+
+```{r}
+levels(fct_reorder(max.table$gene_ID, max.table$max.index, min))
+```
+
+
+```{r}
+yeast.std
+```
+
+
+
+
+
+
+```{r}
+sorted.yeast <-
+  yeast.std |>
+  group_by(gene_ID) 
+
+sorted.yeast$gene_ID = 
+
+
+```
+
+```{r}
+sorted.yeast |>
+  filter(gene_ID %in% unique(sorted.yeast$gene_ID)[1:100]) |>
+  ggplot(aes(x = time, y = gene_ID, fill=std_expression)) +
+  geom_tile() + 
+  scale_fill_gradient2(
+    low = "cyan",
+    mid = "black",
+    high = "yellow",
+    midpoint = 0)  
 
 ```
 
