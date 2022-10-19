@@ -1,5 +1,17 @@
+---
+title: "Lecture 08"
+---
 
+## Libraries
 
 ```{r}
 library(tidyverse)
 ```
+
+
+## Read source data
+
+```{r}
+
+```
+
