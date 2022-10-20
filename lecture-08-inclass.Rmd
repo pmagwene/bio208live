@@ -123,7 +123,6 @@ yeast.std |>
   filter(gene_ID %in% unique(yeast.std$gene_ID)[1:100]) |>
   ggplot(aes(x = time, y = gene_ID, fill=std_expression)) +
   geom_tile() + 
-  #scale_fill_distiller(palette="PiYG")
   scale_fill_gradient2(
     low = "cyan",
     mid = "black",
@@ -140,10 +139,27 @@ max.table <-
   group_by(gene_ID) %>%
   summarize(max.expression = max(std_expression),
             max.index = which.max(std_expression)) 
+
+max.table
 ```
 
+# apply which.max to our data frame as a whole
 ```{r}
-max.table
+yeast.std |>
+  group_by(gene_ID) %>%
+  mutate(max.index = which.max(std_expression))
+
+```
+
+# use which.max to order our data frame
+```{r}
+yeast.std |>
+  group_by(gene_ID) %>%
+  mutate(max.index = which.max(std_expression)) %>%
+  pull(max.index) 
+  mutate(gene_ID2 = fct_reorder(gene))
+
+
 ```
 
 
