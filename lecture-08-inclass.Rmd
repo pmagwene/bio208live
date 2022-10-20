@@ -18,6 +18,9 @@ library(tidyverse)
 # test live share
 yeast.expression <- read_csv("~/Downloads/kelliher-scer-expression-data.csv")
 ```
+
+
+## Filter the top 1600 genes in terms of their periodic rank score (see paper for details)
 ```{r}
 yeast.1600 <-
   filter(yeast.expression, normalized_per_rank <= 1600) |>
@@ -25,7 +28,9 @@ yeast.1600 <-
 ```
 
 
+## Create "long" version of expression data
 
+Note use of `names_transform` argument to insure that the time data get treated as integer values instead of characters
 
 ```{r}
 yeast.long <- 
@@ -40,8 +45,17 @@ str(yeast.long)
 ```
 
 
+## Draw a plot showing  expression of one gene over time
+```{r}
+yeast.long |>
+  filter(gene_ID == "NRM1") |>
+  ggplot(aes(x = time, y = expression, color=gene_ID)) +
+  geom_point() + 
+  geom_line()
 
-# draw a plot showing NRM expression over time
+```
+
+## Draw a plot showingexpression of two genes over time
 ```{r}
 yeast.long |>
   filter(gene_ID %in% c("NRM1","HTB2")) |>
@@ -50,16 +64,9 @@ yeast.long |>
   geom_line()
 
 ```
+## Problem: Magnitude of gene expression very different for these two genes
 
-
-```{r}
-yeast.long |>
-  filter(gene_ID %in% c("NRM1")) |>
-  ggplot(aes(x = expression)) +
-  geom_histogram()
-
-
-```
+Can see this by comparing mean and std dev for expression of these two genes
 
 ```{r}
 yeast.long |>
@@ -69,6 +76,9 @@ yeast.long |>
             std.dev.expression = sd(expression))
 ```
 
+## Solution: Put these genes on a common scale by converting data to Z-scores (mean center, scale std dev to be 1)
+
+### "manual approach"
 ```{r}
 yeast.std <-
   yeast.long |>
@@ -78,16 +88,32 @@ yeast.std <-
   
 ```
 
+### Or using the built-in `scale` function 
+
+I show both here, but generally you'd choose one or the other approach
+
+```{r}
+yeast.std <-
+  yeast.long |>
+  group_by(gene_ID) |>
+  mutate(std_expression = scale(expression))
+  
+```
+
+
+## Replot with scaled data
 
 
 ```{r}
 yeast.std |>
-  filter(gene_ID %in% c("NRM1", "HTB2")) |>
-  group_by(gene_ID) %>%
-  summarize(mean.expression = mean(std_expression),
-            std.dev.expression = sd(std_expression))
+  filter(gene_ID %in% c("NRM1","HTB2")) |>
+  ggplot(aes(x = time, y = std_expression, color=gene_ID)) +
+  geom_point() + 
+  geom_line()
+
 ```
 
+## Let's add one more gene to the mix
 
 ```{r}
 yeast.std |>
@@ -98,13 +124,13 @@ yeast.std |>
 
 ```
 
+Or using a heat-plot representation
 
 ```{r}
 yeast.std |>
   filter(gene_ID %in% c("NRM1","HTB2", "ACE2")) |>
   ggplot(aes(x = time, y = gene_ID, fill=std_expression)) +
   geom_tile() + 
-  #scale_fill_distiller(palette="PiYG")
   scale_fill_gradient2(
     low = "cyan",
     mid = "black",
@@ -112,111 +138,98 @@ yeast.std |>
     midpoint = 0)  
 
 ```
+
+## Create heat plot for first 100 genes in our data frame
+
+Illustrating how unique works
 
 ```{r}
 unique(yeast.std$gene_ID)[1:100]
 ```
 
 
+Switching from `geom_tile` to `geom_raster` because geom_raster more efficient for large heat maps (but less customizable; see docs).
+
+Also showing how to suppress the y-axis ticks and labels
+
 ```{r}
 yeast.std |>
   filter(gene_ID %in% unique(yeast.std$gene_ID)[1:100]) |>
   ggplot(aes(x = time, y = gene_ID, fill=std_expression)) +
-  geom_tile() + 
-  scale_fill_gradient2(
-    low = "cyan",
-    mid = "black",
-    high = "yellow",
-    midpoint = 0)  
+  geom_raster() + 
+  scale_fill_gradient2(low = "cyan",
+                       mid = "black",
+                       high = "yellow",
+                       midpoint = 0) + 
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
 
 ```
 
-# Find the maximum expression of each gene
+## Reordering genes by time point of maximum expression
+
+
+To find the maximum expression of each gene we could use the `max` function
 
 ```{r}
-max.table <-
-  yeast.std |>
-  group_by(gene_ID) %>%
+yeast.std |>
+  group_by(gene_ID) |>
+  summarize(max.expression = max(std_expression)) 
+```
+
+The `which.max` function tells us the index at which the maximum expression occurs
+
+```{r}
+yeast.std |>
+  group_by(gene_ID) |>
   summarize(max.expression = max(std_expression),
             max.index = which.max(std_expression)) 
-
-max.table
 ```
 
-# apply which.max to our data frame as a whole
-```{r}
-yeast.std |>
-  group_by(gene_ID) %>%
-  mutate(max.index = which.max(std_expression))
-
-```
-
-# use which.max to order our data frame
-```{r}
-yeast.std |>
-  group_by(gene_ID) %>%
-  mutate(max.index = which.max(std_expression)) %>%
-  pull(max.index) 
-  mutate(gene_ID2 = fct_reorder(gene))
-
-
-```
-
-
-
+We can use this information to sort gene by their time point of maximum expression. First we sort the gene names by their index of maximum expression
 
 ```{r}
-max.table
-```
-```{r}
-df <- tibble::tribble(
-  ~color,     ~a, ~b,
-  "blue",      1,  2,
-  "green",     6,  2,
-  "purple",    3,  3,
-  "red",       2,  3,
-  "yellow",    5,  1
-)
-fct_reorder(df$color, df$a, min)
-
-```
-
-
-
-```{r}
-levels(fct_reorder(max.table$gene_ID, max.table$max.index, min))
-```
-
-
-```{r}
-yeast.std
-```
-
-
-
-
-
-
-```{r}
-sorted.yeast <-
+genes.by.which.max <-
   yeast.std |>
-  group_by(gene_ID) 
+  group_by(gene_ID) |>
+  mutate(max.index = which.max(std_expression)) |>
+  arrange(max.index) |>
+  pull(gene_ID) |>
+  unique()
 
-sorted.yeast$gene_ID = 
-
-
+# show the first ten genes sorted by index of max expession
+head(genes.by.which.max, n = 10)
 ```
 
+Then we use the `fct_relevel` function to create a new ordering of the `gene_ID` column. 
+
 ```{r}
-sorted.yeast |>
-  filter(gene_ID %in% unique(sorted.yeast$gene_ID)[1:100]) |>
+reordered.gene_ID <- fct_relevel(yeast.std$gene_ID, genes.by.which.max) 
+yeast.std$gene_ID <- reordered.gene_ID
+```
+
+
+Genes will no longer be shown in  alphabetical order but using the  order specified by `genes.by.which.max` vector.
+
+The figure below shows not only the ordered genes, but illustrates a number of other tweaks including:
+
+  * how to change the figure height and width in the code block header
+  * how to set limits on a color scale
+  * how to "squash" or compress data to fit in those limits (`oob` argument)
+  * how to reverse a discrete axis (`scale_y_discrete(limits=rev)`).
+
+```{r, fig.width=3, fig.height=6}
+yeast.std |>
   ggplot(aes(x = time, y = gene_ID, fill=std_expression)) +
-  geom_tile() + 
-  scale_fill_gradient2(
-    low = "cyan",
-    mid = "black",
-    high = "yellow",
-    midpoint = 0)  
+  geom_raster() + 
+  scale_fill_gradient2(low = "cyan",
+                       mid = "black",
+                       high = "yellow",
+                       midpoint = 0, 
+                       limits=c(-2,2),
+                       oob = scales::squish)  +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank()) +
+  scale_y_discrete(limits=rev)
 
 ```
 
