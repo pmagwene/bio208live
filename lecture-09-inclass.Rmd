@@ -11,4 +11,178 @@ library(tidyverse)
 
 ## Load the data
 
+```{r}
+yeast.expression <- 
+  read_csv("~/Downloads/kelliher-scer-expression-data.csv",
+           show_col_types = FALSE)
+```
+
+```{r}
+yeast.800 <-
+  filter(yeast.expression, normalized_per_rank <= 800) |>
+  mutate(normalized_per_rank = NULL)
+```
+
+```{r}
+yeast.long <- 
+  pivot_longer(yeast.800, !gene_ID,
+               names_to = "time",
+               values_to = "expression",
+               names_transform = list(time = as.integer)) |>
+  group_by(gene_ID) |>
+  mutate(expression = as.numeric(scale(expression))) %>%
+  rename(gene = gene_ID)
+```
+
+
+```{r}
+nrm1 <- filter(yeast.long, gene == "NRM1")
+htb2 <- filter(yeast.long, gene == "HTB2")
+
+plot(nrm1$expression, htb2$expression)
+```
+
+```{r}
+1 - cor(nrm1$expression, htb2$expression)
+```
+
+
+```{r}
+yeast.genes.as.vars <-
+  yeast.long |>
+  pivot_wider(names_from = gene, 
+              values_from = expression) |>
+  select(-time)
+```
+
+```{r}
+yeast.corr <- cor(yeast.genes.as.vars)
+```
+
+```{r}
+dim(yeast.corr)
+```
+
+```{r}
+yeast.dist <- 1 - yeast.corr
+```
+
+```{r}
+1 - (yeast.corr[1:5, 1:5])
+```
+```{r}
+yeast.clustering.complete <-
+  hclust(as.dist(yeast.dist), method = "complete")
+```
+
+```{r}
+plot(yeast.clustering.complete)
+```
+
+```{r}
+library(dendextend)
+```
+
+
+```{r}
+yeast.dend <- as.dendrogram(yeast.clustering.complete)
+```
+
+
+```{r}
+plot(yeast.dend, leaflab = "none")
+```
+```{r}
+plot(color_branches(yeast.dend, k=10),leaflab="none")
+```
+```{r}
+clusters <- cutree(yeast.dend, 
+                   k=10, 
+                   order_clusters_as_data = FALSE)
+```
+
+```{r}
+clusters_df <- 
+  tibble(gene = names(clusters), cluster = clusters)
+
+```
+
+```{r}
+clusters_df
+```
+
+
+```{r}
+cluster8.genes <- filter(clusters_df, 
+                         cluster == 8)$gene
+
+cluster8.genes
+```
+
+
+
+```{r}
+
+yeast.long |>
+  filter(gene %in% cluster8.genes) |>
+  ggplot(aes(x = time, y = gene)) + 
+  geom_tile(aes(fill = expression)) +
+  scale_fill_gradient2(low = "cyan",
+                       mid = "black",
+                       high = "yellow",
+                       midpoint = 0, 
+                       limits=c(-2.5,2.5),
+                       oob = scales::squish) +
+  theme(axis.text.y = element_text(size = 6))  # set size of y axis labels
+
+```
+
+
+```{r}
+
+cluster.genes <- filter(clusters_df, 
+                         cluster == 5)$gene
+
+yeast.long |>
+  filter(gene %in% cluster.genes) |>
+  ggplot(aes(x = time, y = gene)) + 
+  geom_tile(aes(fill = expression)) +
+  scale_fill_gradient2(low = "cyan",
+                       mid = "black",
+                       high = "yellow",
+                       midpoint = 0, 
+                       limits=c(-2.5,2.5),
+                       oob = scales::squish) +
+  theme(axis.text.y = element_text(size = 6))  # set size of y axis labels
+
+```
+```{r}
+for (i in 1:10) {
+
+cluster.genes <- filter(clusters_df, 
+                         cluster == i)$gene
+
+yeast.long |>
+  filter(gene %in% cluster.genes) |>
+  ggplot(aes(x = time, y = gene)) + 
+  geom_tile(aes(fill = expression)) +
+  scale_fill_gradient2(low = "cyan",
+                       mid = "black",
+                       high = "yellow",
+                       midpoint = 0, 
+                       limits=c(-2.5,2.5),
+                       oob = scales::squish) +
+  theme(axis.text.y = element_text(size = 6))  # set size of y axis labels
+
+ggsave(str_c("cluster", i, ".png"))
+
+}
+
+```
+
+
+```{r}
+str_c("cluster", 3, ".png")
+```
+
 
